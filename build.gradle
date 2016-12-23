@@ -1,0 +1,21 @@
+group 'ignited-palette'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+sourceCompatibility = 1.8
+mainClassName = 'org.dfhu.ignitedpalette.example.Main'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "com.sparkjava:spark-core:2.5.4"
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
