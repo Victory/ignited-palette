@@ -3,6 +3,7 @@ version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'application'
+//apply plugin: 'idea'
 
 sourceCompatibility = 1.8
 mainClassName = 'org.dfhu.ignitedpalette.example.Main'
@@ -12,6 +13,8 @@ repositories {
 }
 
 dependencies {
+    compile project('preprocessor')
+
     compile "com.sparkjava:spark-core:2.5.4"
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple

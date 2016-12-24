@@ -1,7 +1,9 @@
 package org.dfhu.ignitedpalette.example;
 
-import static spark.Spark.*;
+import org.dfhu.ippp.MyAnnotation;
 import spark.servlet.SparkApplication;
+
+import static spark.Spark.get;
 
 public class ExampleSparkApplication implements SparkApplication {
     @Override
@@ -9,6 +11,7 @@ public class ExampleSparkApplication implements SparkApplication {
         setUpRoutes();
     }
 
+    @MyAnnotation
     public static void setUpRoutes() {
         get("hello", (req, res) -> "hi");
     }

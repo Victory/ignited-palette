@@ -1,2 +1,3 @@
 rootProject.name = 'ignited-palette'
+include 'preprocessor'
 
