@@ -1,9 +1,14 @@
+plugins {
+  id "net.ltgt.apt" version "0.9"
+}
+
 group 'ignited-palette'
 version '1.0-SNAPSHOT'
 
+
 apply plugin: 'java'
 apply plugin: 'application'
-//apply plugin: 'idea'
+apply plugin: 'idea'
 
 sourceCompatibility = 1.8
 mainClassName = 'org.dfhu.ignitedpalette.example.Main'
