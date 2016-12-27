@@ -89,11 +89,22 @@ public class MyPreProcessor extends AbstractProcessor {
         System.out.println("kinds");
         for (Element e: enclosedElements) {
             VariableElement ve = (VariableElement) e;
-            System.out.println("const value " + ve.getConstantValue());
+            System.out.println("const value " + ve.getSimpleName() + " " + ve.getConstantValue());
         }
 
         clsName = "IgnitedPalette" + bits[bits.length - 1];
 
+        String clsString = buildClassString(packageElement, clsName, s);
+
+        System.out.println(clsName + "\n" + clsString);
+
+        JavaFileObject jfo = processingEnv.getFiler().createSourceFile(clsName);
+        BufferedWriter bw = new BufferedWriter(jfo.openWriter());
+        bw.write(clsString);
+        bw.close();
+    }
+
+    private String buildClassString(PackageElement packageElement, String clsName, String s) {
         s = s.replace("\n", "\\n");
         s = s.replace("\"", "\\\"");
 
@@ -111,13 +122,7 @@ public class MyPreProcessor extends AbstractProcessor {
 
         clsString = clsString.replace("#package", packageElement.getQualifiedName());
         clsString = clsString.replace("#clsName", clsName);
-
-        System.out.println(clsName + "\n" + clsString);
-
-        JavaFileObject jfo = processingEnv.getFiler().createSourceFile(clsName);
-        BufferedWriter bw = new BufferedWriter(jfo.openWriter());
-        bw.write(clsString);
-        bw.close();
+        return clsString;
     }
 
 }
