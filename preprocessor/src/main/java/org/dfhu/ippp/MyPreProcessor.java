@@ -94,7 +94,8 @@ public class MyPreProcessor extends AbstractProcessor {
 
         clsName = "IgnitedPalette" + bits[bits.length - 1];
 
-        String clsString = buildClassString(packageElement, clsName, s);
+        String template = new TemplateInjector().inject(s);
+        String clsString = buildClassString(packageElement, clsName, template);
 
         System.out.println(clsName + "\n" + clsString);
 
@@ -104,9 +105,9 @@ public class MyPreProcessor extends AbstractProcessor {
         bw.close();
     }
 
-    private String buildClassString(PackageElement packageElement, String clsName, String s) {
-        s = s.replace("\n", "\\n");
-        s = s.replace("\"", "\\\"");
+    private String buildClassString(PackageElement packageElement, String clsName, String template) {
+        //s = s.replace("\n", "\\n");
+        //s = s.replace("\"", "\\\"");
 
         String nl = "\n";
         String clsString = "package org.dfhu.ippp;" + nl + nl +
@@ -116,7 +117,7 @@ public class MyPreProcessor extends AbstractProcessor {
                 "    return theNumber;" + nl +
                 "  }" + nl +
                 "  public String toString() {" + nl +
-                "    return \"" + s + "\";" + nl +
+                "    return \"" + template + "\";" + nl +
                 "  } " + nl +
                 "}" + nl;
 
