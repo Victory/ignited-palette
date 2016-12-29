@@ -9,8 +9,7 @@ public class TemplateInjector {
     private final byte[] VAR_PREFIX = " ip-var-".getBytes();
 
     public String inject(String template) {
-        StringBuilder sb = new StringBuilder();
-        new String(sb);
+        BufferBuilder sb = new BufferBuilder(4000);
         sb.append('"');
 
         AttributeMatcher attributeMatcher = null;
@@ -39,15 +38,48 @@ public class TemplateInjector {
             }
 
             if (inTag) {
+                sb.append(ch);
                 if (attributeMatcher == null) {
                     attributeMatcher = new AttributeMatcher(VAR_PREFIX);
                 }
                 attributeMatcher.store(ch);
             }
+
         }
 
         sb.append('"');
-        return sb.toString();
+        sb.append('\0');
+        return sb.toString().trim();
+    }
+
+    public static class BufferBuilder {
+        private byte[] bb;
+        private int curSize;
+        private int index = 0;
+
+        public BufferBuilder(int initSize) {
+            curSize = initSize;
+            bb = new byte[curSize];
+        }
+
+        public void append(byte ch) {
+            bb[index] = ch;
+            index += 1;
+        }
+
+        public void append(char ch) {
+            append((byte) ch);
+        }
+
+        public void append(String s) {
+            for (byte ch: s.getBytes()) {
+                append(ch);
+            }
+        }
+
+        public String toString() {
+            return new String(bb);
+        }
     }
 
     public static class AttributeMatcher {

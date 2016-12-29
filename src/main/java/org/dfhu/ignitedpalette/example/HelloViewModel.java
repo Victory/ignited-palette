@@ -4,5 +4,5 @@ import org.dfhu.ippp.IPViewModel;
 
 @IPViewModel(partial = "hello")
 public class HelloViewModel {
-    public String thump = "some thumb";
+    public String greeting = "some greeting";
 }

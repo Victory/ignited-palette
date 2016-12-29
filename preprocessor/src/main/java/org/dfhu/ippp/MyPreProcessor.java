@@ -95,7 +95,7 @@ public class MyPreProcessor extends AbstractProcessor {
         clsName = "IgnitedPalette" + bits[bits.length - 1];
 
         String template = new TemplateInjector().inject(s);
-        String clsString = buildClassString(packageElement, clsName, template);
+        String clsString = buildClassString(packageElement, clsName, template, cls.getQualifiedName().toString());
 
         System.out.println(clsName + "\n" + clsString);
 
@@ -105,24 +105,26 @@ public class MyPreProcessor extends AbstractProcessor {
         bw.close();
     }
 
-    private String buildClassString(PackageElement packageElement, String clsName, String template) {
+    private String buildClassString(
+            PackageElement packageElement, String clsName, String template, String s) {
         //s = s.replace("\n", "\\n");
         //s = s.replace("\"", "\\\"");
 
         String nl = "\n";
         String clsString = "package org.dfhu.ippp;" + nl + nl +
-                "public class #clsName {" + nl +
+                "public class #clsName extends #originalClsName {" + nl +
                 "  public int theNumber = 6;" + nl +
                 "  public int getTheNumber() {" + nl +
                 "    return theNumber;" + nl +
                 "  }" + nl +
                 "  public String toString() {" + nl +
-                "    return \"" + template + "\";" + nl +
+                "    return " + template + ";" + nl +
                 "  } " + nl +
                 "}" + nl;
 
         clsString = clsString.replace("#package", packageElement.getQualifiedName());
         clsString = clsString.replace("#clsName", clsName);
+        clsString = clsString.replace("#originalClsName", s);
         return clsString;
     }
 
