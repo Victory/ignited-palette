@@ -99,11 +99,20 @@ public class TemplateInjectorTest {
     public void twoLinerNoVar() {
         String input = "<p>I am line one</p>\n" +
                 "<p>I am line two</p>";
-        String exected = "\"<p> I am line one</p>\" +\n" +
+        String expected = "\"<p>I am line one</p>\" +\n" +
                 "\"<p>I am line two</p>\"";
         String actual = new TemplateInjector().inject(input);
-        assertEquals(exected, actual);
+        assertEquals(expected, actual);
+    }
 
+    @Test
+    public void twoLinerWithVar() {
+        String input = "<p>I am line one</p>\n" +
+                "<p ip-var-lineTwo></p>";
+        String expected = "\"<p>I am line one</p>\" +\n" +
+                "\"<p ip-var-lineTwo>\" + this.lineTwo + \"</p>\"";
+        String actual = new TemplateInjector().inject(input);
+        assertEquals(expected, actual);
     }
 
     private static String endQuotes(String input) {

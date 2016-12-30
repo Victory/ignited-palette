@@ -7,6 +7,7 @@ public class TemplateInjector {
     private final byte START_TAG = '<';
     private final byte END_TAG = '>';
     private final byte[] VAR_PREFIX = " ip-var-".getBytes();
+    private final byte NEW_LINE = '\n';
 
     public String inject(String template) {
         BufferBuilder sb = new BufferBuilder(4000);
@@ -15,6 +16,11 @@ public class TemplateInjector {
         AttributeMatcher attributeMatcher = null;
         byte[] bytes = template.getBytes();
         for (byte ch: bytes) {
+            if (match(NEW_LINE, ch)) {
+                sb.append("\" +\n\"");
+                continue;
+            }
+
             if (match(START_TAG, ch)) {
                 inTag = true;
                 sb.append(ch);
