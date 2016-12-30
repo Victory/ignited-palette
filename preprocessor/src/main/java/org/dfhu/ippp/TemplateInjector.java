@@ -35,6 +35,7 @@ public class TemplateInjector {
                     }
                 }
                 attributeMatcher = null;
+                continue;
             }
 
             if (inTag) {
@@ -43,6 +44,8 @@ public class TemplateInjector {
                     attributeMatcher = new AttributeMatcher(VAR_PREFIX);
                 }
                 attributeMatcher.store(ch);
+            } else { // in a text node
+                sb.append(ch);
             }
 
         }

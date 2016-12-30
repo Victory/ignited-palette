@@ -78,12 +78,26 @@ public class TemplateInjectorTest {
 
         assertEquals(expected, actual);
     }
+
     @Test
     public void oneLiner() {
         String input = "<p ip-var-greeting></p>";
         String expected = "\"<p ip-var-greeting>\" + this.greeting + \"</p>\"";
         String actual = new TemplateInjector().inject(input);
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void oneLinerNoVar() {
+        String input = "<p>Hi!</p>";
+        String expected = endQuotes(input);
+        String actual = new TemplateInjector().inject(input);
+        assertEquals(expected, actual);
+    }
+
+
+    private static String endQuotes(String input) {
+        return '"' + input + '"';
     }
 
 }
