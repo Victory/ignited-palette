@@ -95,9 +95,18 @@ public class TemplateInjectorTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void twoLinerNoVar() {
+        String input = "<p>I am line one</p>\n" +
+                "<p>I am line two</p>";
+        String exected = "\"<p> I am line one</p>\" +\n" +
+                "\"<p>I am line two</p>\"";
+        String actual = new TemplateInjector().inject(input);
+        assertEquals(exected, actual);
+
+    }
 
     private static String endQuotes(String input) {
         return '"' + input + '"';
     }
-
 }
