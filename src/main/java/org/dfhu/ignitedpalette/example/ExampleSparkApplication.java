@@ -13,6 +13,13 @@ public class ExampleSparkApplication implements SparkApplication {
 
     public static void setUpRoutes() {
         get("hello", (req, res) -> {
+            IgnitedPaletteHelloViewModel vm = new IgnitedPaletteHelloViewModel();
+            vm.greeting = "None default greeting";
+            System.out.println(vm);
+            return vm;
+        });
+
+        get("hello-default", (req, res) -> {
             IgnitedPaletteHelloViewModel ignitedPaletteHelloViewModel = new IgnitedPaletteHelloViewModel();
             System.out.println(ignitedPaletteHelloViewModel);
             return ignitedPaletteHelloViewModel;

@@ -115,6 +115,22 @@ public class TemplateInjectorTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void handleDefaultText() {
+        String input = "<p ip-var-greeting>Show Default</p>";
+        String expected =  "\"<p ip-var-greeting>\" + this.ipGetWithDefault(this.greeting, \"Show Default\") + \"</p>\"";
+        String actual = new TemplateInjector().inject(input);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void handleDefaultTextWithQuotes() {
+        String input = "<p ip-var-greeting>Show \"Default\"</p>";
+        String expected =  "\"<p ip-var-greeting>\" + this.ipGetWithDefault(this.greeting, \"Show \\\"Default\\\"\") + \"</p>\"";
+        String actual = new TemplateInjector().inject(input);
+        assertEquals(expected, actual);
+    }
+
     private static String endQuotes(String input) {
         return '"' + input + '"';
     }

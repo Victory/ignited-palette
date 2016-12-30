@@ -4,69 +4,113 @@ import java.nio.charset.StandardCharsets;
 
 public class TemplateInjector {
     private boolean inTag = false;
+    private String curVar = null;
+
     private final byte START_TAG = '<';
     private final byte END_TAG = '>';
     private final byte[] VAR_PREFIX = " ip-var-".getBytes();
     private final byte NEW_LINE = '\n';
 
-    public String inject(String template) {
-        BufferBuilder sb = new BufferBuilder(4000);
-        sb.append('"');
+    private final String getFunctionName = "ipGetWithDefault";
 
-        AttributeMatcher attributeMatcher = null;
+    public String inject(String template) {
+        BufferBuilder templateBuffer = new BufferBuilder(4000);
+        BufferBuilder defaultValBuffer = null;
+
+        templateBuffer.append('"');
+
+        AttributeMatcher varMatcher = null;
         byte[] bytes = template.getBytes();
         for (byte ch: bytes) {
             if (match(NEW_LINE, ch)) {
-                sb.append("\" +\n\"");
+                templateBuffer.append("\" +\n\"");
                 continue;
             }
 
             if (match(START_TAG, ch)) {
                 inTag = true;
-                sb.append(ch);
+
+                // print var part of the template
+                if (curVar != null) {
+                    templateBuffer.append('"');
+                    templateBuffer.append(" + this.");
+
+                    if (defaultValBuffer == null) {
+                        // if we have no defaults just append the field directly
+                        templateBuffer.append(curVar);
+                    } else { // we have a defaults so need to call method
+                        // build the call to getFunction
+                        templateBuffer.append(getFunctionName);
+                        templateBuffer.append('(');
+                        templateBuffer.append("this.");
+                        templateBuffer.append(curVar);
+                        templateBuffer.append(", ");
+                        templateBuffer.append(textNodeQuote(defaultValBuffer));
+                        templateBuffer.append(')');
+                        defaultValBuffer = null;
+                    }
+
+                    templateBuffer.append(" + ");
+                    templateBuffer.append('"');
+                }
+
+                templateBuffer.append(ch);
                 continue;
             }
 
             if (match(END_TAG, ch)) {
                 inTag = false;
-                sb.append(ch);
-                if (attributeMatcher != null) {
-                    String var = attributeMatcher.getVar();
-                    if (var != null) {
-                        sb.append('"');
-                        sb.append(" + this.");
-                        sb.append(var);
-                        sb.append(" + ");
-                        sb.append('"');
-                    }
+                templateBuffer.append(ch);
+                if (varMatcher != null) {
+                    curVar = varMatcher.getVar();
                 }
-                attributeMatcher = null;
+                varMatcher = null;
                 continue;
             }
 
             if (inTag) {
-                sb.append(ch);
-                if (attributeMatcher == null) {
-                    attributeMatcher = new AttributeMatcher(VAR_PREFIX);
+                templateBuffer.append(ch);
+                if (varMatcher == null) {
+                    varMatcher = new AttributeMatcher(VAR_PREFIX);
                 }
-                attributeMatcher.store(ch);
-            } else { // in a text node
-                sb.append(ch);
+                varMatcher.store(ch);
+                continue;
+            }
+
+            if (!inTag) { // in a text node
+                if (curVar != null) { // with default value
+                    if (defaultValBuffer == null) {
+                        defaultValBuffer = new BufferBuilder(400);
+                    }
+                    defaultValBuffer.append(ch);
+                } else { // just normal html text with no var
+                    templateBuffer.append(ch);
+                }
             }
 
         }
 
-        sb.append('"');
-        sb.append('\0');
-        return sb.toString().trim();
+        templateBuffer.append('"');
+        templateBuffer.append('\0');
+        return templateBuffer.toString().trim();
     }
 
+    private byte[] textNodeQuote(BufferBuilder bb) {
+        // XXX - needs to be optimized
+        String tmp = bb.toString();
+        tmp = tmp.replace("\n", "\\n");
+        tmp = tmp.replace("\"", "\\\"");
+        tmp = "\"" + tmp + "\"";
+        return tmp.getBytes();
+    }
+
+    @SuppressWarnings("WeakerAccess")
     public static class BufferBuilder {
         private byte[] bb;
         private int curSize;
         private int index = 0;
 
-        public BufferBuilder(int initSize) {
+        BufferBuilder(int initSize) {
             curSize = initSize;
             bb = new byte[curSize];
         }
@@ -86,8 +130,22 @@ public class TemplateInjector {
             }
         }
 
+        public void append(byte[] bytes) {
+            for (byte ch: bytes) {
+                if (ch == 0) {
+                    return;
+                }
+                append(ch);
+            }
+        }
+
+        public byte[] getBytes() {
+           return bb;
+        }
+
         public String toString() {
-            return new String(bb);
+            bb[index] = 0;
+            return new String(bb, 0, index, StandardCharsets.UTF_8);
         }
     }
 
@@ -143,7 +201,7 @@ public class TemplateInjector {
         }
 
         public String getVar() {
-            if (bb == null) {
+            if (!hasVar()) {
                 return null;
             }
 
@@ -155,6 +213,13 @@ public class TemplateInjector {
             }
             bb[bufferIndex] = 0;
             return new String(bb, 0, bufferIndex, StandardCharsets.UTF_8);
+        }
+
+        public boolean hasVar() {
+            if (bb == null) {
+                return false;
+            }
+            return true;
         }
     }
 

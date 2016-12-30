@@ -113,9 +113,8 @@ public class MyPreProcessor extends AbstractProcessor {
         String nl = "\n";
         String clsString = "package org.dfhu.ippp;" + nl + nl +
                 "public class #clsName extends #originalClsName {" + nl +
-                "  public int theNumber = 6;" + nl +
-                "  public int getTheNumber() {" + nl +
-                "    return theNumber;" + nl +
+                "  public String ipGetWithDefault(String vv, String defaultVal) {" + nl +
+                "    return (vv != null && !vv.isEmpty()) ? vv : defaultVal;" + nl +
                 "  }" + nl +
                 "  public String toString() {" + nl +
                 "    return " + template + ";" + nl +
