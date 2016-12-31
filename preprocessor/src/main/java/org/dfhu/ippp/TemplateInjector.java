@@ -2,6 +2,7 @@ package org.dfhu.ippp;
 
 import java.nio.charset.StandardCharsets;
 
+@SuppressWarnings("WeakerAccess")
 public class TemplateInjector {
     private boolean inTag = false;
     private String curVar = null;
@@ -104,7 +105,6 @@ public class TemplateInjector {
         return tmp.getBytes();
     }
 
-    @SuppressWarnings("WeakerAccess")
     public static class BufferBuilder {
         private byte[] bb;
         private int curSize;
