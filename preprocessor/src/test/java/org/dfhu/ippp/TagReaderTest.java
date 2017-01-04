@@ -31,6 +31,30 @@ public class TagReaderTest {
     }
 
     @Test
+    public void getsOpeningTagName() {
+        String input = "<p ignored-attr>";
+        TagReader tagReader = new TagReader();
+        String expected = "p";
+        for (byte ch: input.getBytes()) {
+            tagReader.store(ch);
+        }
+        String actual = tagReader.getTagName();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void getsOpeningTagNameNoAttrs() {
+        String input = "<p>";
+        TagReader tagReader = new TagReader();
+        String expected = "p";
+        for (byte ch: input.getBytes()) {
+            tagReader.store(ch);
+        }
+        String actual = tagReader.getTagName();
+        assertEquals(expected, actual);
+    }
+
+    @Test
     public void testDoubleQuoteAttrs() {
         String input = "<p foo=\"bar\">";
         Map<String, String> expected = new HashMap<String, String>();
