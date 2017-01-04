@@ -2,6 +2,8 @@ package org.dfhu.ippp;
 
 import org.junit.Test;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,32 +14,23 @@ public class TagReaderTest {
     @Test
     public void noAttrs() {
         String input = "<p>";
-        TagReader tagReader = new TagReader();
-        for (byte ch: input.getBytes()) {
-            tagReader.store(ch);
-        }
+        TagReader tagReader = buildTagReader(input);
         assertEquals(0, tagReader.getAttrs().size());
     }
 
     @Test
     public void endTag() {
         String input = "</p>";
-        TagReader tagReader = new TagReader();
-        for (byte ch: input.getBytes()) {
-            tagReader.store(ch);
-        }
-
+        TagReader tagReader = buildTagReader(input);
         assertEquals(0, tagReader.getAttrs().size());
     }
 
     @Test
     public void getsOpeningTagName() {
         String input = "<p ignored-attr>";
-        TagReader tagReader = new TagReader();
         String expected = "p";
-        for (byte ch: input.getBytes()) {
-            tagReader.store(ch);
-        }
+
+        TagReader tagReader = buildTagReader(input);
         String actual = tagReader.getTagName();
         assertEquals(expected, actual);
     }
@@ -45,41 +38,65 @@ public class TagReaderTest {
     @Test
     public void getsOpeningTagNameNoAttrs() {
         String input = "<p>";
-        TagReader tagReader = new TagReader();
         String expected = "p";
-        for (byte ch: input.getBytes()) {
-            tagReader.store(ch);
-        }
+
+        TagReader tagReader = buildTagReader(input);
+
         String actual = tagReader.getTagName();
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testDoubleQuoteAttrs() {
+    public void doubleQuoteAttrs() {
         String input = "<p foo=\"bar\">";
         Map<String, String> expected = new HashMap<String, String>();
         expected.put("foo", "bar");
 
-        TagReader tagReader = new TagReader();
-        for (byte ch: input.getBytes()) {
-            tagReader.store(ch);
-        }
+        TagReader tagReader = buildTagReader(input);
 
         assertEquals(tagReader.getAttrs().get("foo"), "bar");
     }
 
     @Test
-    public void testTwoAttrs() {
+    public void twoAttrs() {
         String input = "<p foo=\"bar\" biz=\"baz\">";
         Map<String, String> expected = new HashMap<String, String>();
         expected.put("foo", "bar");
         expected.put("biz", "baz");
+
+        TagReader tagReader = buildTagReader(input);
+
+        assertEquals("bar", tagReader.getAttrs().get("foo"));
+        assertEquals("baz", tagReader.getAttrs().get("biz"));
+    }
+
+    @Test
+    public void multiLine() {
+        String input = "<p foo=\"bar\" \n biz=\"baz\">";
+        Map<String, String> expected = new HashMap<String, String>();
+        expected.put("foo", "bar");
+        expected.put("biz", "baz");
+
+        TagReader tagReader = buildTagReader(input);
+
+        assertEquals("bar", tagReader.getAttrs().get("foo"));
+        assertEquals("baz", tagReader.getAttrs().get("biz"));
+    }
+
+    private TagReader buildTagReader(String input) {
+        StringReader sr = new StringReader(input);
         TagReader tagReader = new TagReader();
-        for (byte ch: input.getBytes()) {
-            tagReader.store(ch);
+
+        try {
+            int ch = sr.read();
+            while (ch >= 0) {
+                tagReader.store(ch);
+                ch = sr.read();
+            }
+        } catch (IOException e) {
+            fail(e.getMessage());
         }
 
-        assertEquals(tagReader.getAttrs().get("foo"), "bar");
-        assertEquals(tagReader.getAttrs().get("biz"), "baz");
+        return tagReader;
     }
 }
