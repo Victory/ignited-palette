@@ -24,6 +24,13 @@ public class ExampleSparkApplication implements SparkApplication {
             System.out.println(ignitedPaletteHelloViewModel);
             return ignitedPaletteHelloViewModel;
         });
+
+        get("otf", (req, res) -> {
+            IgnitedPaletteHelloViewModel viewModel = new IgnitedPaletteHelloViewModel();
+            viewModel.greeting = "my new greeting";
+            System.out.println(viewModel.onTheFly());
+            return viewModel.onTheFly();
+        });
     }
 
     @Override

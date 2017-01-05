@@ -2,6 +2,8 @@ package org.dfhu.ippp;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("WeakerAccess")
 public class TemplateInjector {
@@ -16,6 +18,127 @@ public class TemplateInjector {
     private final byte CR = '\r';
 
     private final String getFunctionName = "ipGetWithDefault";
+
+    public String onFly(String template) throws IOException {
+        BufferBuilder templateBuffer = new BufferBuilder(4000);
+        BufferBuilder defaultValBuffer = null;
+
+        //templateBuffer.append('"');
+
+        TagReader tagReader = null;
+        // TODO make this a UNICODE point iteration
+        byte[] bytes = template.getBytes();
+        for (byte ch: bytes) {
+
+            // ignore windows CR
+            if (match(CR, ch)) {
+                continue;
+            }
+
+            if (match(NEW_LINE, ch)) {
+                System.out.println("appending new line");
+                templateBuffer.append("\" +\n\"");
+                continue;
+            }
+
+            if (match(START_TAG, ch)) {
+                inTag = true;
+
+                // print var part of the template
+                if (curVar != null) {
+                    //templateBuffer.append('"');
+                    //templateBuffer.append(" + this.");
+
+                    if (defaultValBuffer == null) {
+                        // if we have no defaults just append the field directly
+                        templateBuffer.append(curVar);
+                    } else { // we have a defaults so need to call method
+                        // build the call to getFunction
+
+                        templateBuffer.append("#~#" + curVar + "#~#");
+                        /*
+                        templateBuffer.append(getFunctionName);
+                        templateBuffer.append('(');
+                        templateBuffer.append("this.");
+                        templateBuffer.append(curVar);
+                        templateBuffer.append(", ");
+                        templateBuffer.append(textNodeQuote(defaultValBuffer));
+                        templateBuffer.append(')');
+                        */
+                        defaultValBuffer = null;
+                    }
+
+                    //templateBuffer.append(" + ");
+                    //templateBuffer.append('"');
+                }
+
+                templateBuffer.append(ch);
+                continue;
+            }
+
+            // stop handling HTML tag
+            if (match(END_TAG, ch)) {
+                inTag = false;
+                // store the > char
+                templateBuffer.append(ch);
+
+                if (tagReader != null) {
+                    curVar = tagReader.getAttrs().get(VAR_ATTR_NAME);
+                }
+                tagReader = null;
+                continue;
+            }
+
+            // handle HTML tag
+            if (inTag) {
+
+                // Add backslashes to double quotes
+                if (match(DOUBLE_QUOTE, ch)) {
+                    //templateBuffer.append('\\');
+                }
+
+                templateBuffer.append(ch);
+                if (tagReader == null) {
+                    tagReader = new TagReader();
+                }
+                tagReader.read(ch);
+                continue;
+            }
+
+            if (!inTag) { // in a text node
+                if (curVar != null) { // with default value
+                    if (defaultValBuffer == null) {
+                        defaultValBuffer = new BufferBuilder(400);
+                    }
+                    defaultValBuffer.append(ch);
+                } else { // just normal html text with no var
+                    // Add backslashes to double quotes
+
+                    if (match(DOUBLE_QUOTE, ch)) {
+                        templateBuffer.append('\\');
+                    }
+                    templateBuffer.append(ch);
+                }
+            }
+
+        }
+
+        //templateBuffer.append('"');
+        return templateBuffer.toString().trim();
+    }
+
+    public String injectReplace(String template) throws IOException {
+        template = onFly(template);
+        template = template.replace("\"", "\\\"");
+        Pattern pattern = Pattern.compile("#~#([a-z][0-9A-Za-z]+)#~#");
+
+        Matcher matcher = pattern.matcher(template);
+        if (matcher.find()) {
+            template = matcher.replaceAll("\" + this.greeting + \"");
+        }
+
+        return '"' + template + '"';
+    }
 
     public String inject(String template) throws IOException {
         BufferBuilder templateBuffer = new BufferBuilder(4000);
