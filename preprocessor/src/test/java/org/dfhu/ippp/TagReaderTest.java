@@ -90,7 +90,7 @@ public class TagReaderTest {
         try {
             int ch = sr.read();
             while (ch >= 0) {
-                tagReader.store(ch);
+                tagReader.read(ch);
                 ch = sr.read();
             }
         } catch (IOException e) {

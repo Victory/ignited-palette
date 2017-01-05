@@ -1,5 +1,6 @@
 package org.dfhu.ippp;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @SuppressWarnings("WeakerAccess")
@@ -9,21 +10,33 @@ public class TemplateInjector {
 
     private final byte START_TAG = '<';
     private final byte END_TAG = '>';
-    private final byte[] VAR_PREFIX = " ip-var-".getBytes();
+    private final byte DOUBLE_QUOTE = '"';
+    private final String VAR_ATTR_NAME = "ip-var";
     private final byte NEW_LINE = '\n';
+    private final byte CR = '\r';
 
     private final String getFunctionName = "ipGetWithDefault";
 
-    public String inject(String template) {
+    public String inject(String template) throws IOException {
         BufferBuilder templateBuffer = new BufferBuilder(4000);
         BufferBuilder defaultValBuffer = null;
 
         templateBuffer.append('"');
 
-        AttributeMatcher varMatcher = null;
+        TagReader tagReader = null;
+        // TODO make this a UNICODE point iteration
         byte[] bytes = template.getBytes();
         for (byte ch: bytes) {
+
+            System.out.println(templateBuffer.toString());
+
+            // ignore windows CR
+            if (match(CR, ch)) {
+                continue;
+            }
+
             if (match(NEW_LINE, ch)) {
+                System.out.println("appending new line");
                 templateBuffer.append("\" +\n\"");
                 continue;
             }
@@ -59,22 +72,32 @@ public class TemplateInjector {
                 continue;
             }
 
+            // stop handling HTML tag
             if (match(END_TAG, ch)) {
                 inTag = false;
+                // store the > char
                 templateBuffer.append(ch);
-                if (varMatcher != null) {
-                    curVar = varMatcher.getVar();
+
+                if (tagReader != null) {
+                    curVar = tagReader.getAttrs().get(VAR_ATTR_NAME);
                 }
-                varMatcher = null;
+                tagReader = null;
                 continue;
             }
 
+            // handle HTML tag
             if (inTag) {
-                templateBuffer.append(ch);
-                if (varMatcher == null) {
-                    varMatcher = new AttributeMatcher(VAR_PREFIX);
+
+                // Add backslashes to double quotes
+                if (match(DOUBLE_QUOTE, ch)) {
+                    templateBuffer.append('\\');
                 }
-                varMatcher.store(ch);
+
+                templateBuffer.append(ch);
+                if (tagReader == null) {
+                    tagReader = new TagReader();
+                }
+                tagReader.read(ch);
                 continue;
             }
 
@@ -85,6 +108,11 @@ public class TemplateInjector {
                     }
                     defaultValBuffer.append(ch);
                 } else { // just normal html text with no var
+                    // Add backslashes to double quotes
+
+                    if (match(DOUBLE_QUOTE, ch)) {
+                        templateBuffer.append('\\');
+                    }
                     templateBuffer.append(ch);
                 }
             }
@@ -96,57 +124,20 @@ public class TemplateInjector {
         return templateBuffer.toString().trim();
     }
 
-    private byte[] textNodeQuote(BufferBuilder bb) {
+    private int[] textNodeQuote(BufferBuilder bb) {
         // XXX - needs to be optimized
         String tmp = bb.toString();
         tmp = tmp.replace("\n", "\\n");
         tmp = tmp.replace("\"", "\\\"");
         tmp = "\"" + tmp + "\"";
-        return tmp.getBytes();
-    }
 
-    public static class BufferBuilder {
-        private byte[] bb;
-        private int curSize;
-        private int index = 0;
-
-        BufferBuilder(int initSize) {
-            curSize = initSize;
-            bb = new byte[curSize];
+        int[] chars = new int[tmp.length()];
+        int ii = 0;
+        for (byte b: tmp.getBytes()) {
+            chars[ii] = b;
+            ii += 1;
         }
-
-        public void append(byte ch) {
-            bb[index] = ch;
-            index += 1;
-        }
-
-        public void append(char ch) {
-            append((byte) ch);
-        }
-
-        public void append(String s) {
-            for (byte ch: s.getBytes()) {
-                append(ch);
-            }
-        }
-
-        public void append(byte[] bytes) {
-            for (byte ch: bytes) {
-                if (ch == 0) {
-                    return;
-                }
-                append(ch);
-            }
-        }
-
-        public byte[] getBytes() {
-           return bb;
-        }
-
-        public String toString() {
-            bb[index] = 0;
-            return new String(bb, 0, index, StandardCharsets.UTF_8);
-        }
+        return chars;
     }
 
     public static class AttributeMatcher {

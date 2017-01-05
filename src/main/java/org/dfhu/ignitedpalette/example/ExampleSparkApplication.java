@@ -14,7 +14,7 @@ public class ExampleSparkApplication implements SparkApplication {
     public static void setUpRoutes() {
         get("hello", (req, res) -> {
             IgnitedPaletteHelloViewModel vm = new IgnitedPaletteHelloViewModel();
-            vm.greeting = "None default greeting";
+            vm.greeting = "No default greeting";
             System.out.println(vm);
             return vm;
         });

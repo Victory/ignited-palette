@@ -2,18 +2,21 @@ package org.dfhu.ippp;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
 import static org.junit.Assert.*;
 
 public class TemplateInjectorTest {
 
+    /*
     @Test
     public void prefixMatch() {
         byte[] prefix = " ip-var-".getBytes();
-        byte[] target = " ip-var-greeting".getBytes();
+        byte[] target = " ip-var=\"greeting\"".getBytes();
         TemplateInjector.AttributeMatcher attributeMatcher =
                 new TemplateInjector.AttributeMatcher(prefix);
         for (byte ch: target) {
-            attributeMatcher.store(ch);
+            attributeMatcher.read(ch);
         }
 
         String expected = "greeting";
@@ -33,14 +36,13 @@ public class TemplateInjectorTest {
         TemplateInjector.AttributeMatcher attributeMatcher =
                 new TemplateInjector.AttributeMatcher(prefix);
         for (byte ch: target) {
-            attributeMatcher.store(ch);
+            attributeMatcher.read(ch);
         }
 
         String actual = attributeMatcher.getVar();
 
         assertEquals(expected, actual);
     }
-
 
     @Test
     public void prefixMatchNameTooLong() {
@@ -52,7 +54,7 @@ public class TemplateInjectorTest {
         TemplateInjector.AttributeMatcher attributeMatcher =
                 new TemplateInjector.AttributeMatcher(prefix);
         for (byte ch: target) {
-            attributeMatcher.store(ch);
+            attributeMatcher.read(ch);
         }
 
         try {
@@ -70,7 +72,7 @@ public class TemplateInjectorTest {
         TemplateInjector.AttributeMatcher attributeMatcher =
                 new TemplateInjector.AttributeMatcher(prefix);
         for (byte ch: target) {
-            attributeMatcher.store(ch);
+            attributeMatcher.read(ch);
         }
 
         String expected = "gre";
@@ -78,17 +80,18 @@ public class TemplateInjectorTest {
 
         assertEquals(expected, actual);
     }
+    */
 
     @Test
-    public void oneLiner() {
-        String input = "<p ip-var-greeting></p>";
-        String expected = "\"<p ip-var-greeting>\" + this.greeting + \"</p>\"";
+    public void oneLiner() throws IOException {
+        String input = "<p ip-var=\"greeting\"></p>";
+        String expected = "\"<p ip-var=\\\"greeting\\\">\" + this.greeting + \"</p>\"";
         String actual = new TemplateInjector().inject(input);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void oneLinerNoVar() {
+    public void oneLinerNoVar() throws IOException {
         String input = "<p>Hi!</p>";
         String expected = endQuotes(input);
         String actual = new TemplateInjector().inject(input);
@@ -96,7 +99,7 @@ public class TemplateInjectorTest {
     }
 
     @Test
-    public void twoLinerNoVar() {
+    public void twoLinerNoVar() throws IOException {
         String input = "<p>I am line one</p>\n" +
                 "<p>I am line two</p>";
         String expected = "\"<p>I am line one</p>\" +\n" +
@@ -106,27 +109,40 @@ public class TemplateInjectorTest {
     }
 
     @Test
-    public void twoLinerWithVar() {
+    public void twoLinerWithVar() throws IOException {
         String input = "<p>I am line one</p>\n" +
-                "<p ip-var-lineTwo></p>";
+                "<p ip-var=\"lineTwo\"></p>";
         String expected = "\"<p>I am line one</p>\" +\n" +
-                "\"<p ip-var-lineTwo>\" + this.lineTwo + \"</p>\"";
+                "\"<p ip-var=\\\"lineTwo\\\">\" + this.lineTwo + \"</p>\"";
         String actual = new TemplateInjector().inject(input);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void handleDefaultText() {
-        String input = "<p ip-var-greeting>Show Default</p>";
-        String expected =  "\"<p ip-var-greeting>\" + this.ipGetWithDefault(this.greeting, \"Show Default\") + \"</p>\"";
+    public void basicExampleWithVar() throws IOException {
+        String input = "<div>\n" +
+                "  <p ip-var=\"greeting\"></p>\n" +
+                "</div>";
+        String expected = "\"<div>\" +\n" +
+                "\"  <p ip-var=\\\"greeting\\\">\" + this.greeting + \"</p>\" +\n" +
+                "\"</div>\"";
+
         String actual = new TemplateInjector().inject(input);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void handleDefaultTextWithQuotes() {
-        String input = "<p ip-var-greeting>Show \"Default\"</p>";
-        String expected =  "\"<p ip-var-greeting>\" + this.ipGetWithDefault(this.greeting, \"Show \\\"Default\\\"\") + \"</p>\"";
+    public void handleDefaultText() throws IOException {
+        String input = "<p ip-var=\"greeting\">Show Default</p>";
+        String expected =  "\"<p ip-var=\\\"greeting\\\">\" + this.ipGetWithDefault(this.greeting, \"Show Default\") + \"</p>\"";
+        String actual = new TemplateInjector().inject(input);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void handleDefaultTextWithQuotes() throws IOException {
+        String input = "<p ip-var=\"greeting\">Show \"Default\"</p>";
+        String expected =  "\"<p ip-var=\\\"greeting\\\">\" + this.ipGetWithDefault(this.greeting, \"Show \\\"Default\\\"\") + \"</p>\"";
         String actual = new TemplateInjector().inject(input);
         assertEquals(expected, actual);
     }

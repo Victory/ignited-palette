@@ -32,7 +32,7 @@ public class TagReader {
      * Process the next byte of a HTML tag if
      * @param ch - byte to process
      */
-    public void store(int ch) {
+    public void read(int ch) {
         if (match(ch, TAG_ENDINGS)) {
             return;
         }

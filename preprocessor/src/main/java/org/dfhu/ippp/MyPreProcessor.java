@@ -95,6 +95,7 @@ public class MyPreProcessor extends AbstractProcessor {
         clsName = "IgnitedPalette" + bits[bits.length - 1];
 
         String template = new TemplateInjector().inject(s);
+
         String clsString = buildClassString(packageElement, clsName, template, cls.getQualifiedName().toString());
 
         System.out.println(clsName + "\n" + clsString);
